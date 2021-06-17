@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjpowernode.mapper.ProductMapper">
+
+    <!--开启二级缓存：
+        特点：
+            1. 保存在服务器的磁盘中
+            2. 保存的数据必须实现序列化接口
+            3. 生命周期：sqlSession对象关闭时，会将关闭之前查询的数据保存到磁盘中，
+                当前命名空间下任意更新语句的执行，都会清空当前命名空间下的所有二级缓存数据
+
+         不适合使用二级缓存的两种情况：
+            1. 多表连接查询，会导致脏数据的问题
+            2. 在开启了延迟加载的清空下，多表嵌套查询，也不应使用二级缓存，会导致延迟属性获取失败
+    -->
+    <cache />
+
+    <select id="get" resultType="com.bjpowernode.domain.Product">
+        select * from product where id=#{id}
+    </select>
+
+    <select id="getByCond" resultType="com.bjpowernode.domain.Product">
+        select * from product
+        <where>
+            <if test="name!=null and name!=''">
+                and name like '%' #{name} '%'
+            </if>
+            <if test="description!=null and description!=''">
+                and description like concat('%', #{description}, '%')
+            </if>
+        </where>
+    </select>
+
+    <delete id="delete">
+        delete from product where id=#{id}
+    </delete>
+
+    <insert id="insert">
+        insert into product values(
+            #{id},
+            #{name},
+            #{tid},
+            #{price},
+            #{num},
+            #{imgurl},
+            #{description}
+        )
+    </insert>
+
+    <update id="update">
+        update product set
+            name=#{name},
+            tid=#{tid},
+            price=#{price},
+            num=#{num},
+            imgurl=#{imgurl},
+            description=#{description}
+        where id=#{id}
+    </update>
+    <!--
+        for(String id: ids) {}
+    -->
+    <delete id="deleteBatch">
+        delete from product where id in(
+        <foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>)
+    </delete>
+
+    <select id="getByTid" resultType="com.bjpowernode.domain.Product">
+        select * from product where tid=#{tid}
+    </select>
+
+    <resultMap id="productMap" type="com.bjpowernode.domain.Product">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="tid" column="tid" />
+        <result property="price" column="price" />
+        <result property="num" column="num" />
+        <result property="imgurl" column="imgurl" />
+        <result property="description" column="description" />
+
+        <!--映射type中的属性和查询字段之间的关系-->
+        <association property="type">
+            <id property="id" column="tid" />
+            <result property="name" column="t_name" />
+        </association>
+    </resultMap>
+    
+    <select id="getWithType" resultMap="productMap" useCache="false">
+        select a.*,b.name t_name from product a, type b where a.tid=b.id and a.id=#{id}
+    </select>
+
+    <resultMap id="productMap2" type="com.bjpowernode.domain.Product">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="tid" column="tid" />
+        <result property="price" column="price" />
+        <result property="num" column="num" />
+        <result property="imgurl" column="imgurl" />
+        <result property="description" column="description" />
+
+        <!--映射type中的属性和查询字段之间的关系-->
+        <association property="type" column="tid" select="com.bjpowernode.mapper.TypeMapper.get" />
+    </resultMap>
+
+    <!--
+    场景：查询条件中包含 类别名称 和 商品名称
+    分步查询的适用场景：查询条件中不能包含其它表中的字段
+    但是实际开发中，多数情况下，查询条件中都会包含关联表中名称字段或者是其它字段
+
+    优点：效率高
+    缺点：不适用查询条件中不能包含其它表中的字段
+    -->
+    <select id="getWithTypeForNesting" resultMap="productMap2" useCache="false">
+        select * from product where id=#{id}
+    </select>
+</mapper>

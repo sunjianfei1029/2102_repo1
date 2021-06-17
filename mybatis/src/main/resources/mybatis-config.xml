@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <properties resource="jdbc.properties" />
+
+    <!--全局配置-->
+    <settings>
+        <!--SQL日志，可以看到SQL的执行过程-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+        <!--开启延迟加载-->
+        <setting name="lazyLoadingEnabled" value="true" />
+        <!--
+            调用对象的equals,clone,hashCode,toString方法会触发延迟加载
+        -->
+        <setting name="lazyLoadTriggerMethods" value="" />
+    </settings>
+
+    <!--类型别名-->
+    <typeAliases>
+        <!--单个起别名-->
+        <!--<typeAlias type="com.bjpowernode.domain.Type" alias="Type" />-->
+        <!--为指定包下的所有类型起别名：别名是类名，首字母大小写都可以-->
+        <package name="com.bjpowernode.domain" />
+    </typeAliases>
+
+    <!--配置环境（数据源）-->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!--注册映射文件-->
+    <mappers>
+        <!--<mapper resource="ProductMapper.xml" />-->
+        <!--<mapper resource="TypeMapper.xml" />-->
+        <!--<mapper resource="CommonsMapper.xml" />-->
+        <package name="com.bjpowernode.mapper" />
+    </mappers>
+</configuration>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjpowernode.mapper.TypeMapper">
+
+
+
+    <delete id="delete">
+        delete from type where id=#{id}
+    </delete>
+
+    <insert id="insert">
+        insert into type values(
+            #{id},
+            #{name}
+        )
+        <selectKey keyColumn="id" keyProperty="id" resultType="string" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+    </insert>
+
+    <update id="update">
+        update type set
+            name=#{name}
+        where id=#{id}
+    </update>
+
+    <!--通过 resultMap 标签，映射属性名和字段名的对应关系 -->
+    <resultMap id="typeMap" type="Type">
+        <!--
+            property: 类中的属性名
+            column: 表中的字段名
+        -->
+        <!--主键使用id标签映射-->
+        <id property="id" column="id" />
+        <!--其它字段使用result标签映射-->
+        <result property="name" column="name" />
+    </resultMap>
+
+    <!--当表中字段名和类中的属性名不一致的解决方案：方案2：通过resultMap标签去映射字段名和属性名之间的关系-->
+    <select id="get" resultMap="typeMap">
+        select * from type where id=#{id}
+    </select>
+
+
+    <!--当表中字段名和类中的属性名不一致的解决方案：方案1：给查询的字段起别名，缺点是不方便复用和维护-->
+    <select id="getAll" resultType="Type">
+        select id, name1 name from type
+    </select>
+
+    <select id="getAll2" resultMap="typeMap">
+        select * from type where id=#{id} and name1=#{name}
+    </select>
+
+    <select id="getAll3" resultMap="typeMap">
+        select * from type where id=#{id} and name1=#{type.name}
+    </select>
+
+    <select id="getAll4" resultMap="typeMap">
+        select * from type where name1 like '%' #{name} '%'
+    </select>
+    
+    <resultMap id="typeMap2" type="Type">
+        <id property="id" column="a_id" />
+        <result property="name" column="a_name" />
+
+        <!--如果属性是集合类型，需要使用 collection 来映射 集合泛型于查询字段的关系 -->
+        <collection property="products" ofType="Product">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="tid" column="tid" />
+            <result property="price" column="price" />
+            <result property="num" column="num" />
+            <result property="imgurl" column="imgurl" />
+            <result property="description" column="description" />
+        </collection>
+    </resultMap>
+    
+    <select id="getWithProducts" resultMap="typeMap2">
+        select a.id a_id, a.name a_name,b.* from type a, product b where a.id=b.tid
+    </select>
+    
+    <resultMap id="typeMap3" type="Type">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+
+        <!--分步查询商品信息
+        column：分步查询需要使用哪个字段
+        select：分步查询使用哪个命名空间下的哪个方法
+        -->
+        <collection property="products" column="id" select="com.bjpowernode.mapper.ProductMapper.getByTid" />
+    </resultMap>
+
+    <select id="getWithProductsForNesting" resultMap="typeMap3">
+        select * from type where id=#{id}
+    </select>
+</mapper>
